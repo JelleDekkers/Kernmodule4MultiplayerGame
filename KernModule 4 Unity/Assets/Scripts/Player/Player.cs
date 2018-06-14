@@ -15,6 +15,7 @@ public class Player : NetworkBehaviour {
     public PlayerCharacter character;
     public delegate int NewPlayerDelegate(Player player);
     public static NewPlayerDelegate OnNewPlayer;
+    public static Action<Player> OnLocalPlayerCreated;
     public TurnManager turnManagerPrefab;
 
     private Action OnPlayerCharacterDeath;
@@ -33,13 +34,8 @@ public class Player : NetworkBehaviour {
 
     public override void OnStartLocalPlayer() {
         base.OnStartLocalPlayer();
-
-        //if (isServer) {
-        //    GameObject turnManager = Instantiate(turnManagerPrefab.gameObject);
-        //    NetworkServer.Spawn(turnManager);
-        //}
-        //// only needs to be called on server player once, because it's not instantiated yet
-        //TurnManager.Instance.RegisterNewPlayer(this);
+        if(OnLocalPlayerCreated != null)
+            OnLocalPlayerCreated.Invoke(this);
         TurnManager.Instance.SetLocalPlayer(GetComponent<NetworkIdentity>(), id);
     }
 

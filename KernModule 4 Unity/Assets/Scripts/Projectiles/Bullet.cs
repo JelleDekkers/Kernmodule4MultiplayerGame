@@ -14,9 +14,13 @@ public class Bullet : Projectile {
 
     private void OnCollisionEnter(Collision collision) {
         IDamageable damagableObject = collision.gameObject.GetInterface<IDamageable>();
-        if (damagableObject != null) 
+        if (damagableObject != null) {
             OnHit(damagableObject);
-        if(!collider.GetComponent<Bullet>())
+            Destroy(gameObject);
+            return;
+        }
+
+        if(!collision.gameObject.GetComponent<Bullet>())
             Destroy(gameObject);
     }
 

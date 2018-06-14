@@ -54,10 +54,10 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   characterPrefab: {fileID: 114241134264530278, guid: 39e192d4c64b1ec4b854a18691366df8,
     type: 2}
-  name: 
+  name: New Player
   id: 0
-  score: 0
   kills: 0
+  deaths: 0
   character: {fileID: 0}
   turnManagerPrefab: {fileID: 114785094772666442, guid: 1f0333cf17143ef448d2b4a76d6122e1,
     type: 2}

@@ -13,6 +13,8 @@ public class PlayerCharacter : NetworkBehaviour, IDamageable {
     public Inventory inventory;
     public Action onDeath;
 
+    public static Action<PlayerCharacter> OnLocalCharacterCreated;
+
     private void Start() {
         inventory = GetComponent<Inventory>();
     }
@@ -22,6 +24,9 @@ public class PlayerCharacter : NetworkBehaviour, IDamageable {
         Owner = TurnManager.GetPlayer(id);
         transform.SetParent(Owner.transform);
         InitComponents();
+
+        if(Owner.isLocalPlayer)
+            OnLocalCharacterCreated.Invoke(this);
     }
 
     private void InitComponents() {
