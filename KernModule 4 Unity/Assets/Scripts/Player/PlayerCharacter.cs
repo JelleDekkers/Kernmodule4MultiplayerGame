@@ -5,18 +5,14 @@ using UnityEngine.Networking;
 public class PlayerCharacter : NetworkBehaviour, IDamageable {
 
     public Player Owner { get; private set; }
-    public float maxHealthPoints = 100;
-
-    [SyncVar]
-    public float healthPoints;
-
     public Inventory inventory;
-    public Action onDeath;
+    public Action onHit;
 
     public static Action<PlayerCharacter> OnLocalCharacterCreated;
 
     private void Start() {
         inventory = GetComponent<Inventory>();
+        TurnManager.OnGameOver += DisableOnGameOver;
     }
 
     [ClientRpc]
@@ -39,41 +35,33 @@ public class PlayerCharacter : NetworkBehaviour, IDamageable {
         if (!isServer)
             return;
 
-        CmdTakeDamage(info.Damage, info.OwnerID, info.ItemID);
+        if (onHit != null)
+            onHit.Invoke();
+
+        Debug.Log("sendin cmd from Owner " + Owner.id + " recipient " + info.OwnerID);
+        CmdOnHitRecieved(Owner.id, info.OwnerID, info.ItemID);
     }
 
     [Command]
-    private void CmdTakeDamage(float amount, int damageFromPlayerID, int itemID) {
-        healthPoints -= amount;
-        Player playerThatDidDamage = null;
-        Item weapon = null;
-
-        if (damageFromPlayerID > 0) {
-            playerThatDidDamage = TurnManager.GetPlayer(damageFromPlayerID);
-            weapon = ItemManager.GetItembyID(itemID);
-        }
-
-        if (healthPoints < 0) {
-            CmdDie();
-            if(playerThatDidDamage != null) {
-                Debug.Log(Owner.id + " was killed by " + playerThatDidDamage.name + " with a " + weapon.Data.name);
-                playerThatDidDamage.kills++;
-            }
-            healthPoints = 0;
-        } 
+    private void CmdOnHitRecieved(int hitPlayerID, int recipientPlayerID, int itemID) {
+        RpcOnPlayerHit(hitPlayerID, recipientPlayerID, itemID);
     }
 
-    [Command]
-    private void CmdDie() {
-        Debug.Log("DIE");
-        if (onDeath != null)
-            onDeath.Invoke();
-        NetworkServer.Destroy(gameObject);
+    [ClientRpc]
+    private void RpcOnPlayerHit(int hitPlayerID, int recipientPlayerID, int itemID) {
+        Player playerHit = TurnManager.GetPlayer(hitPlayerID); 
+        Player recipient = TurnManager.GetPlayer(recipientPlayerID);
+        Item weapon = ItemManager.GetItembyID(itemID);
+
+        string playerHitName = playerHit.name;
+        if (playerHit.id == Owner.id)
+            playerHitName = "You ";
+        Debug.Log(playerHitName + " was hit by " + recipient.name + " with a " + weapon.Data.name);
+        recipient.hits++;
     }
 
-    public void Heal(float amount) {
-        healthPoints += amount;
-        if (healthPoints > maxHealthPoints)
-            healthPoints = maxHealthPoints;
+    private void DisableOnGameOver() {
+        TurnManager.OnGameOver -= DisableOnGameOver;
+        enabled = false;
     }
 }

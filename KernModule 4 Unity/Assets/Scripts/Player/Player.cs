@@ -9,27 +9,21 @@ public class Player : NetworkBehaviour {
 
     [SyncVar] public new string name = "New Player";
     [SyncVar] public int id = -1;
-    [SyncVar] public int kills;
-    [SyncVar] public int deaths;
+    [SyncVar] public int hits;
 
     public PlayerCharacter character;
+    public Color color;
+
     public delegate int NewPlayerDelegate(Player player);
     public static NewPlayerDelegate OnNewPlayer;
     public static Action<Player> OnLocalPlayerCreated;
     public TurnManager turnManagerPrefab;
 
-    private Action OnPlayerCharacterDeath;
-
-    private void Start() {
-        OnPlayerCharacterDeath = delegate () {
-            TurnManager.onNewTurn += RespawnOnTurn;
-        };
-    }
-
     public override void OnStartClient() {
         base.OnStartLocalPlayer();
         if (OnNewPlayer != null)
             id = OnNewPlayer.Invoke(this);
+        color = PlayerColorManager.GetColor(id);
     }
 
     public override void OnStartLocalPlayer() {
@@ -53,23 +47,14 @@ public class Player : NetworkBehaviour {
     }
 
     public void SpawnCharacterObject() {
-        character = Instantiate(characterPrefab, Vector3.zero + Vector3.up, Quaternion.identity) as PlayerCharacter;
+        character = Instantiate(characterPrefab, SpawnUtility.GetRandomLocation() + Vector3.up, Quaternion.identity) as PlayerCharacter;
         NetworkServer.SpawnWithClientAuthority(character.gameObject, connectionToClient);
         character.RpcInit(id);
-        character.onDeath += OnPlayerCharacterDeath;
-    }
-
-    private void RespawnOnTurn(int playerID, int turnNr) {
-        character.onDeath -= OnPlayerCharacterDeath;
-        if (playerID == id) {
-            SpawnCharacterObject();
-            TurnManager.onNewTurn -= RespawnOnTurn;
-        }
     }
 
     private void OnGUI() {
         if (isLocalPlayer && TurnManager.Instance.gameStarted == false) {
-            GUILayout.BeginArea(new Rect(10, 300, 200, 100));
+            GUILayout.BeginArea(new Rect(10, 200, 200, 100));
             GUILayout.BeginVertical("box", GUILayout.Width(200));
             GUILayout.Label("Enter Name");
             name = GUILayout.TextField(name);

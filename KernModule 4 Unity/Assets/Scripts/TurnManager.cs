@@ -24,6 +24,7 @@ public class TurnManager : NetworkBehaviour {
     public FloatVariable secondsPerTurn;
     public GameEvent onNewTurnGameEvent;
 
+    public static Action onGameStarted;
     public static Action<int, int> onNewTurn;
     public static Action onTurnEnd;
     public static bool isMyTurn;
@@ -48,8 +49,10 @@ public class TurnManager : NetworkBehaviour {
     // Needs it's own function because at RegisterNewPlayer() the player.LocalPlayer var hasn't been set yet 
     public void SetLocalPlayer(NetworkIdentity playerNetworkIdentity, int id) {
         localPlayer = players[id];
-        if(playerNetworkIdentity.isServer)
+        if (playerNetworkIdentity.isServer) {
             networkIdentity.AssignClientAuthority(playerNetworkIdentity.connectionToClient);
+            GameTimer.onTimerReachedZero += EndGame;
+        }
     }
 
     public static Player GetPlayer(int id) {
@@ -81,17 +84,21 @@ public class TurnManager : NetworkBehaviour {
         return player.id == currentTurnPlayerID;
     }
 
-    //private void RemoveDisconnectedPlayer(Player player) {
-    //    players.Remove(player);
-    //    RebuildPlayerIDs();
-    //}
+    private void OnPlayerDisconnected(NetworkPlayer player) {
+        
+    }
 
-    //// server only
-    //private void RebuildPlayerIDs() {
-    //    for(int i = 0; i < players.Count; i++) {
-    //        players[i].id = i;
-    //    }
-    //}
+    private void RemoveDisconnectedPlayer(Player player) {
+        players.Remove(player);
+        RebuildPlayerIDs();
+    }
+
+    [Server]
+    private void RebuildPlayerIDs() {
+        for (int i = 0; i < players.Count; i++) {
+            players[i].id = i;
+        }
+    }
 
     /// <summary>
     /// Needs these parameters because syncvars are annoyingly synced after this function gets called
@@ -121,10 +128,18 @@ public class TurnManager : NetworkBehaviour {
         networkIdentity.AssignClientAuthority(players[currentTurnPlayerID].connectionToClient);
     }
 
+    [Server]
     private void StartGame() {
         SpawnPlayerCharacters();
         gameStarted = true;
+        RpcOnGameStart();
         CmdStartNextTurn();
+    }
+
+    [ClientRpc]
+    private void RpcOnGameStart() {
+        if (onGameStarted != null)
+            onGameStarted.Invoke();
     }
 
     private void SpawnPlayerCharacters() {
@@ -170,5 +185,6 @@ public class TurnManager : NetworkBehaviour {
 
     private void OnDestroy() {
         Player.OnNewPlayer += RegisterNewPlayer;
+        GameTimer.onTimerReachedZero -= EndGame;
     }
 }

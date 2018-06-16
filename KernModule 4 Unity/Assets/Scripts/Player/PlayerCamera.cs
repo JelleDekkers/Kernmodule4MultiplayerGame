@@ -20,7 +20,7 @@ public class PlayerCamera : MonoBehaviour {
         target = character;
         enabled = true;
         camera.enabled = true;
-        character.onDeath += StopFollowing;
+        //character.onDeath += StopFollowing;
         PlayerCharacter.OnLocalCharacterCreated -= SetTarget;
     }
 

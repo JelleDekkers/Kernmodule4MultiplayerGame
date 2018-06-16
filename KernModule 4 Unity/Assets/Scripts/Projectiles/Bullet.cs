@@ -7,9 +7,15 @@ public class Bullet : Projectile {
     public float speed;
     public new Rigidbody rigidbody;
     public new Collider collider;
+    public BulletTrail trail;
 
     private void Start() {
-        Freeze(); 
+        Freeze();
+    }
+
+    public override void InitExtraFunc(int playerID, int itemID) {
+        base.InitExtraFunc(playerID, itemID);
+        trail.Init(player.color);
     }
 
     private void OnCollisionEnter(Collision collision) {
@@ -25,7 +31,8 @@ public class Bullet : Projectile {
     }
 
     private void OnHit(IDamageable hittableObject) {
-        hittableObject.Hit(new DamageInfo(player.id, player.id, WeaponFiredFrom.id));
+        SingleFireWeaponData d = WeaponFiredFrom.Data as SingleFireWeaponData;
+        hittableObject.Hit(new DamageInfo(player.id, WeaponFiredFrom.id, d.damagePerProjectile));
         Destroy(gameObject);
     }
 

@@ -6,11 +6,10 @@ using UnityEngine.UI;
 [RequireComponent(typeof(Text))]
 public class ScorePanel : MonoBehaviour {
 
-    public Text playerName, kills, deaths;
+    public Text playerName, kills;
 
     public void Init(Player player) {
         playerName.text = player.name;
-        kills.text = player.kills.ToString();
-        deaths.text = player.deaths.ToString();
+        kills.text = player.hits.ToString();
     }
 }
