@@ -84,12 +84,21 @@ public class TurnManager : NetworkBehaviour {
         return player.id == currentTurnPlayerID;
     }
 
-    private void OnPlayerDisconnected(NetworkPlayer player) {
-        
+    public static void OnClientDisconnect() {
+        instance.StartCoroutine(instance.RemovePlayer());
     }
 
-    private void RemoveDisconnectedPlayer(Player player) {
-        players.Remove(player);
+    private IEnumerator RemovePlayer() {
+        // wait a bit, otherwise the player hasn't been removed from the game yet
+        yield return new WaitForSeconds(.25f);
+
+        for(int i = 0; i < players.Count; i++) { 
+            if (players[i] == null) {
+                Debug.Log("removing player");
+                players.RemoveAt(i);
+                continue;
+            }
+        }
         RebuildPlayerIDs();
     }
 
