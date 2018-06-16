@@ -17,7 +17,6 @@ public class Player : NetworkBehaviour {
     public delegate int NewPlayerDelegate(Player player);
     public static NewPlayerDelegate OnNewPlayer;
     public static Action<Player> OnLocalPlayerCreated;
-    public TurnManager turnManagerPrefab;
 
     public override void OnStartClient() {
         base.OnStartLocalPlayer();
